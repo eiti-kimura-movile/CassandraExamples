@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+
+
+	<appender name="ap_system" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="Encoding" value="UTF-8" />
+		<param name="File" value="logs/system.log" />
+		<param name="DatePattern" value=".yyyy-MM-dd" />
+		<param name="Threshold" value="ALL" />
+		<param name="ImmediateFlush" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%-5p] [%d{ISO8601}] [%C(%M)] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="ap_cassandra" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="Encoding" value="UTF-8" />
+		<param name="File" value="logs/cassandra.log" />
+		<param name="DatePattern" value=".yyyy-MM-dd" />
+		<param name="Threshold" value="ALL" />
+		<param name="ImmediateFlush" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%-5p] [%d{ISO8601}] [%C(%M)] %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="system">
+		<level value="DEBUG" />
+		<appender-ref ref="ap_system" />
+	</logger>
+
+    <logger name="cassandra">
+		<level value="DEBUG" />
+		<appender-ref ref="ap_cassandra" />
+	</logger> 
+
+	<logger name="me.prettyprint">
+		<level value="INFO" />
+		<appender-ref ref="ap_cassandra" />
+	</logger>
+
+	<logger name="org.apache.cassandra">
+		<level value="DEBUG" />
+		<appender-ref ref="ap_cassandra" />
+	</logger>
+
+</log4j:configuration>
+

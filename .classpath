@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="lib/hector/cassandra-all-0.7.4.jar"/>
+	<classpathentry kind="lib" path="lib/hector/cassandra-javautils-0.7.0.jar"/>
+	<classpathentry kind="lib" path="lib/hector/commons-lang-2.4.jar"/>
+	<classpathentry kind="lib" path="lib/hector/commons-pool-1.5.3.jar"/>
+	<classpathentry kind="lib" path="lib/hector/FastInfoset-1.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/hector/guava-r08.jar"/>
+	<classpathentry kind="lib" path="lib/hector/hector-core-0.7.0-31.jar"/>
+	<classpathentry kind="lib" path="lib/hector/high-scale-lib-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/hector/jul-to-slf4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/hector/libthrift-0.5.0.jar"/>
+	<classpathentry kind="lib" path="lib/hector/perf4j-0.9.12.jar"/>
+	<classpathentry kind="lib" path="lib/hector/slf4j-api-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/hector/uuid-3.2.0.jar"/>
+	<classpathentry kind="lib" path="lib/apache-log4j-extras-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang-2.5.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-log4j12-1.6.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

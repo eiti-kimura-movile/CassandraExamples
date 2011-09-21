@@ -1,0 +1,7 @@
+-- commands to create a basic data structure to run the examples
+$CASSANDRA_HOME/bin/cassadra-cli
+
+create keyspace Company;
+
+use Company;
+create column family Employees;
