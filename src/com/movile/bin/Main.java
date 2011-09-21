@@ -2,7 +2,7 @@ package com.movile.bin;
 
 import org.apache.log4j.xml.DOMConfigurator;
 
-import com.movile.bean.User;
+import com.movile.bean.Person;
 import com.movile.cassandra.CassandraDAOImpl;
 import com.movile.utils.AppProperties;
 
@@ -28,9 +28,9 @@ public final class Main {
 
         // inserting data to cluster column family
         System.out.println("Inserting data...");
-        User user = new User("ekm82", "Eiti Kimura", "boom", "mypassword", "eiti@mail.com");
-        manager.insert(user);
-        System.out.println(user);
+        Person person = new Person("ekm82", "Eiti Kimura", "boom", "mypassword", "eiti@mail.com");
+        manager.save(person);
+        System.out.println(person);
 
         // the data struture inside cassandra will be:
         // [default@Company] get Employees['ekm82'];
@@ -42,9 +42,9 @@ public final class Main {
 
         // retrieving data from comlumn family
         System.out.println("Reading data");
-        User user2 = new User();
-        user2 = manager.getUser("ekm82");
-        System.out.println(user2);
+        Person personRetrieved = new Person();
+        personRetrieved = manager.getPerson("ekm82");
+        System.out.println(personRetrieved);
 
         // finish the resources
         manager.shutdown();

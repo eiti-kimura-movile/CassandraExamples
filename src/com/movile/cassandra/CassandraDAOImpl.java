@@ -13,7 +13,7 @@ import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import com.movile.bean.User;
+import com.movile.bean.Person;
 
 /**
  * @author J.P. Eiti Kimura (eiti.kimura@movile.com)
@@ -46,7 +46,7 @@ public class CassandraDAOImpl extends CassandraBase {
      * @param id column key
      * @throws HectorException
      */
-    public void deleteUser(String id) throws HectorException {
+    public void deletePerson(String id) throws HectorException {
         deleteColumn(id, null);
     }
 
@@ -91,51 +91,49 @@ public class CassandraDAOImpl extends CassandraBase {
 
     /**
      * Inserts an entire entity to Employee column family
-     * @param user user bean
+     * @param person person bean
      * @throws HectorException
      */
-    public void insert(final User user) throws HectorException {
+    public void save(final Person person) throws HectorException {
 
         ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
                 stringSerializer);
 
-        ColumnFamilyUpdater<String, String> updater = template.createUpdater(user.getId());
-        updater.setString("name", user.getName());
-        updater.setString("email", user.getEmail());
-        updater.setString("login", user.getLogin());
-        updater.setString("passwd", user.getPasswd());
-        updater.setLong("creation", user.getCreationDate().getTime());
+        ColumnFamilyUpdater<String, String> updater = template.createUpdater(person.getId());
+        updater.setString("name", person.getName());
+        updater.setString("email", person.getEmail());
+        updater.setString("login", person.getLogin());
+        updater.setString("passwd", person.getPasswd());
+        updater.setLong("creation", person.getCreationDate().getTime());
 
         template.update(updater);
     }
 
     /**
-     * Get a user related with some column key
+     * Get a person related with some column key
      * @param id the key
      * @return a filled User bean
      * @throws HectorException
      */
-    public User getUser(final String id) throws HectorException {
+    public Person getPerson(final String id) throws HectorException {
 
-        User user = null;
+        Person person = null;
         ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
                 stringSerializer);
 
         ColumnFamilyResult<String, String> res = template.queryColumns(id);
 
         if (res.hasResults()) {
-            user = new User();
-            user.setId(id);
-            user.setName(res.getString("name"));
-            user.setEmail(res.getString("email"));
-            user.setLogin(res.getString("login"));
-            user.setPasswd(res.getString("passwd"));
-            user.setCreationDate(res.getLong("creation") != null ? new Date(res.getLong("creation")) : null);
-            HColumn<String, ByteBuffer> column = res.getColumn("name");
-            System.out.println("Last changed: " + new Date(column.getClock() / 1000));
+            person = new Person();
+            person.setId(id);
+            person.setName(res.getString("name"));
+            person.setEmail(res.getString("email"));
+            person.setLogin(res.getString("login"));
+            person.setPasswd(res.getString("passwd"));
+            person.setCreationDate(res.getLong("creation") != null ? new Date(res.getLong("creation")) : null);
         }
 
-        return user;
+        return person;
     }
 
     /**
@@ -162,5 +160,21 @@ public class CassandraDAOImpl extends CassandraBase {
         } else {
             return null;
         }
+    }
+    
+    
+    public HColumn<String, ByteBuffer> getColumn(final String id, String columnkey) throws HectorException {
+
+        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
+                stringSerializer);
+
+        HColumn<String, ByteBuffer> column = null;
+        
+        ColumnFamilyResult<String, String> res = template.queryColumns(id);
+        if (res.hasResults()) {
+            column = res.getColumn(columnkey);
+        }
+        
+        return column;
     }
 }
