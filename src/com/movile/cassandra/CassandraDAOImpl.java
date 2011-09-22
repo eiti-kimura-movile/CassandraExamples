@@ -108,7 +108,73 @@ public class CassandraDAOImpl extends CassandraBase {
 
         template.update(updater);
     }
+    
+    
+    /**
+     * Inserts an entire entity to Employee column family
+     * @param person person bean
+     * @throws HectorException
+     */
+    public void saveV2(final Person person) throws HectorException {
 
+        Mutator<String> mutator = HFactory.createMutator(keyspace, stringSerializer);
+        
+        HColumn<String, String> colName = HFactory.createStringColumn("name", person.getName());
+        HColumn<String, String> colEmail = HFactory.createStringColumn("email", person.getEmail());
+        HColumn<String, String> colLogin = HFactory.createStringColumn("login", person.getLogin());
+        HColumn<String, String> colPasswd = HFactory.createStringColumn("passwd", person.getPasswd());
+        HColumn<String, Long> colCreation = HFactory.createColumn("creation", person.getCreationDate().getTime(), stringSerializer, longSerializer);
+        
+        String key = person.getId();
+        mutator.addInsertion(key, COLUMNFAMILY_EMP, colName);
+        mutator.addInsertion(key, COLUMNFAMILY_EMP, colEmail);
+        mutator.addInsertion(key, COLUMNFAMILY_EMP, colLogin);
+        mutator.addInsertion(key, COLUMNFAMILY_EMP, colPasswd);
+        mutator.addInsertion(key, COLUMNFAMILY_EMP, colCreation);
+        
+        mutator.execute();
+    }
+
+    
+    
+    /**
+     * Updates a specific column inside key, and return the new timestamp of the column
+     * @param id key
+     * @param column key of column
+     * @param value value to be changed
+     * @param type enum describing the type of data
+     * @throws HectorException
+     */
+    public Long updateColumn(final String id, String columnKey, Object value, Type type) throws HectorException {
+
+        Mutator<String> mutator = HFactory.createMutator(keyspace, stringSerializer);
+        String COLUMN_FAMILY = COLUMNFAMILY_EMP;
+        Long timestamp = 0L;
+
+        if (type.equals(Type.STRING)) {
+            HColumn<String, String> column = HFactory.createStringColumn(columnKey, (String) value);
+            mutator.insert(id, COLUMN_FAMILY, column);
+            timestamp = column.getClock();
+            
+        } else if (type.equals(Type.LONG)) {
+            HColumn<String, Long> column = HFactory.createColumn(columnKey, (Long) value, stringSerializer, longSerializer);
+            mutator.insert(id, COLUMN_FAMILY, column);
+            timestamp = column.getClock();
+            
+        } else if (type.equals(Type.BYTE_ARRAY)) {
+            HColumn<String, byte[]> column = HFactory.createColumn(columnKey, (byte[]) value, stringSerializer, byteArraySerializer);
+            mutator.insert(id, COLUMN_FAMILY, column);
+            timestamp = column.getClock();
+            
+        } else {
+            throw new InvalidParameterException("Invalid type");
+        }
+
+        return timestamp/1000L; // return in ms
+    }
+    
+    
+    
     /**
      * Get a person related with some column key
      * @param id the key

@@ -1,5 +1,6 @@
 package com.movile.bin;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import com.movile.bean.Person;
