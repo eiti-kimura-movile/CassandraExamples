@@ -1,10 +1,9 @@
 package com.movile.bin;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import com.movile.bean.Person;
-import com.movile.cassandra.CassandraDAOImpl;
+import com.movile.cassandra.EmployeeDAOImpl;
 import com.movile.utils.AppProperties;
 
 /**
@@ -25,12 +24,12 @@ public final class Main {
         DOMConfigurator.configure("conf/log/log4j.xml");
         AppProperties.getDefaultInstance().loadProperties("conf/const.properties");
 
-        CassandraDAOImpl manager = new CassandraDAOImpl();
+        EmployeeDAOImpl empDAO = new EmployeeDAOImpl();
 
         // inserting data to cluster column family
         System.out.println("Inserting data...");
         Person person = new Person("ekm82", "Eiti Kimura", "boom", "mypassword", "eiti@mail.com");
-        manager.save(person);
+        empDAO.save(person);
         System.out.println(person);
 
         // the data struture inside cassandra will be:
@@ -44,11 +43,11 @@ public final class Main {
         // retrieving data from comlumn family
         System.out.println("Reading data");
         Person personRetrieved = new Person();
-        personRetrieved = manager.getPerson("ekm82");
+        personRetrieved = empDAO.getPerson("ekm82");
         System.out.println(personRetrieved);
 
         // finish the resources
-        manager.shutdown();
+        empDAO.shutdown();
     }
 
 }

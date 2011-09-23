@@ -5,3 +5,4 @@ create keyspace Company;
 
 use Company;
 create column family Employees;
+create column family MessageBoard;

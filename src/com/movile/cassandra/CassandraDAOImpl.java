@@ -2,7 +2,10 @@ package com.movile.cassandra;
 
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
 
 import me.prettyprint.cassandra.service.template.ColumnFamilyResult;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
@@ -13,10 +16,9 @@ import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import com.movile.bean.Person;
-
 /**
  * @author J.P. Eiti Kimura (eiti.kimura@movile.com)
+ * Generic dao operations
  * 
  * check the Hector source code for more details (it doesnt have documentation):
  * @see https://github.com/rantav/hector/tree/master/core/src/main/java/me/prettyprint/hector/api
@@ -27,6 +29,7 @@ import com.movile.bean.Person;
  */
 public class CassandraDAOImpl extends CassandraBase {
 
+    private String columnFamily;
     /**
      * Internal Enum
      */
@@ -37,8 +40,9 @@ public class CassandraDAOImpl extends CassandraBase {
     };
 
     // default constructor
-    public CassandraDAOImpl() {
+    public CassandraDAOImpl(String columnFamily) {
         super();
+        this.columnFamily = columnFamily;
     }
 
     /**
@@ -46,7 +50,7 @@ public class CassandraDAOImpl extends CassandraBase {
      * @param id column key
      * @throws HectorException
      */
-    public void deletePerson(String id) throws HectorException {
+    public void delete(String id) throws HectorException {
         deleteColumn(id, null);
     }
 
@@ -58,7 +62,7 @@ public class CassandraDAOImpl extends CassandraBase {
      */
     public void deleteColumn(String id, String column) throws HectorException {
         Mutator<String> mutator = HFactory.createMutator(keyspace, stringSerializer);
-        mutator.delete(id, COLUMNFAMILY_EMP, column, stringSerializer);
+        mutator.delete(id, columnFamily, column, stringSerializer);
     }
 
     /**
@@ -71,11 +75,12 @@ public class CassandraDAOImpl extends CassandraBase {
      */
     public void update(final String id, String column, Object value, Type type) throws HectorException {
 
-        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
+        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, columnFamily, stringSerializer,
                 stringSerializer);
 
         ColumnFamilyUpdater<String, String> updater = template.createUpdater(id);
-
+        updater.setDate(column, new Date());
+        
         if (type.equals(Type.STRING)) {
             updater.setString(column, (String) value);
         } else if (type.equals(Type.LONG)) {
@@ -88,54 +93,6 @@ public class CassandraDAOImpl extends CassandraBase {
 
         template.update(updater);
     }
-
-    /**
-     * Inserts an entire entity to Employee column family
-     * @param person person bean
-     * @throws HectorException
-     */
-    public void save(final Person person) throws HectorException {
-
-        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
-                stringSerializer);
-
-        ColumnFamilyUpdater<String, String> updater = template.createUpdater(person.getId());
-        updater.setString("name", person.getName());
-        updater.setString("email", person.getEmail());
-        updater.setString("login", person.getLogin());
-        updater.setString("passwd", person.getPasswd());
-        updater.setLong("creation", person.getCreationDate().getTime());
-
-        template.update(updater);
-    }
-    
-    
-    /**
-     * Inserts an entire entity to Employee column family
-     * @param person person bean
-     * @throws HectorException
-     */
-    public void saveV2(final Person person) throws HectorException {
-
-        Mutator<String> mutator = HFactory.createMutator(keyspace, stringSerializer);
-        
-        HColumn<String, String> colName = HFactory.createStringColumn("name", person.getName());
-        HColumn<String, String> colEmail = HFactory.createStringColumn("email", person.getEmail());
-        HColumn<String, String> colLogin = HFactory.createStringColumn("login", person.getLogin());
-        HColumn<String, String> colPasswd = HFactory.createStringColumn("passwd", person.getPasswd());
-        HColumn<String, Long> colCreation = HFactory.createColumn("creation", person.getCreationDate().getTime(), stringSerializer, longSerializer);
-        
-        String key = person.getId();
-        mutator.addInsertion(key, COLUMNFAMILY_EMP, colName);
-        mutator.addInsertion(key, COLUMNFAMILY_EMP, colEmail);
-        mutator.addInsertion(key, COLUMNFAMILY_EMP, colLogin);
-        mutator.addInsertion(key, COLUMNFAMILY_EMP, colPasswd);
-        mutator.addInsertion(key, COLUMNFAMILY_EMP, colCreation);
-        
-        mutator.execute();
-    }
-
-    
     
     /**
      * Updates a specific column inside key, and return the new timestamp of the column
@@ -148,7 +105,7 @@ public class CassandraDAOImpl extends CassandraBase {
     public Long updateColumn(final String id, String columnKey, Object value, Type type) throws HectorException {
 
         Mutator<String> mutator = HFactory.createMutator(keyspace, stringSerializer);
-        String COLUMN_FAMILY = COLUMNFAMILY_EMP;
+        String COLUMN_FAMILY = columnFamily;
         Long timestamp = 0L;
 
         if (type.equals(Type.STRING)) {
@@ -172,35 +129,38 @@ public class CassandraDAOImpl extends CassandraBase {
 
         return timestamp/1000L; // return in ms
     }
-    
-    
+
     
     /**
-     * Get a person related with some column key
-     * @param id the key
-     * @return a filled User bean
+     * Get all of String columns from a column family key
+     * @param id key of column family
+     * @return a Map with related parameters
      * @throws HectorException
      */
-    public Person getPerson(final String id) throws HectorException {
+    public Map<String,String> getColumns(final String id) throws HectorException {
 
-        Person person = null;
-        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
+        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, columnFamily, stringSerializer,
                 stringSerializer);
 
         ColumnFamilyResult<String, String> res = template.queryColumns(id);
-
+        
+        Map<String,String> columns = new TreeMap<String, String>();
+        
         if (res.hasResults()) {
-            person = new Person();
-            person.setId(id);
-            person.setName(res.getString("name"));
-            person.setEmail(res.getString("email"));
-            person.setLogin(res.getString("login"));
-            person.setPasswd(res.getString("passwd"));
-            person.setCreationDate(res.getLong("creation") != null ? new Date(res.getLong("creation")) : null);
+            
+               Collection<String> columnList = res.getColumnNames();
+               
+               for (String columnName : columnList) {
+                   HColumn<String, ByteBuffer> column = res.getColumn(columnName);
+                   String value = stringSerializer.fromByteBuffer(column.getValue());
+                   columns.put(column.getName(), value);
+               }
         }
 
-        return person;
+        return columns;
     }
+    
+    
 
     /**
      * Retrieve data from a specific column
@@ -212,7 +172,7 @@ public class CassandraDAOImpl extends CassandraBase {
      */
     public Object getColumnValue(final String id, String column, Type type) throws HectorException {
 
-        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
+        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, columnFamily, stringSerializer,
                 stringSerializer);
 
         ColumnFamilyResult<String, String> res = template.queryColumns(id);
@@ -227,11 +187,17 @@ public class CassandraDAOImpl extends CassandraBase {
             return null;
         }
     }
-    
-    
+
+    /**
+     * Get a cassandra's column
+     * @param id
+     * @param columnkey
+     * @return
+     * @throws HectorException
+     */
     public HColumn<String, ByteBuffer> getColumn(final String id, String columnkey) throws HectorException {
 
-        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, COLUMNFAMILY_EMP, stringSerializer,
+        ColumnFamilyTemplate<String, String> template = new ThriftColumnFamilyTemplate<String, String>(keyspace, columnFamily, stringSerializer,
                 stringSerializer);
 
         HColumn<String, ByteBuffer> column = null;

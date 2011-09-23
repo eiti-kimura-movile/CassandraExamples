@@ -3,6 +3,8 @@ package com.movile.tests;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,6 +19,7 @@ import org.junit.Test;
 
 import com.movile.bean.Person;
 import com.movile.cassandra.CassandraDAOImpl;
+import com.movile.cassandra.EmployeeDAOImpl;
 import com.movile.utils.AppProperties;
 
 /**
@@ -25,6 +28,7 @@ import com.movile.utils.AppProperties;
 public class CassadraTest {
 
     private static CassandraDAOImpl manager;
+    private static EmployeeDAOImpl empDAO;
 
     /**
      * @throws java.lang.Exception
@@ -35,7 +39,9 @@ public class CassadraTest {
         DOMConfigurator.configure("conf/log/log4j.xml");
         AppProperties.getDefaultInstance().loadProperties("conf/const.properties");
 
-        manager = new CassandraDAOImpl();
+        manager = new CassandraDAOImpl("Employees");
+        empDAO = new EmployeeDAOImpl();
+        
         setupDataSet();
     }
 
@@ -56,14 +62,14 @@ public class CassadraTest {
      */
     @Test
     public void updateObject() {
-        Person jared = manager.getPerson("jared86");
+        Person jared = empDAO.getPerson("jared86");
         String email = "newmail@mail.com";
 
         // set a new e-mail
         jared.setEmail("newmail@mail.com");
-        manager.save(jared);
+        empDAO.save(jared);
 
-        Assert.assertEquals(email, manager.getPerson("jared86").getEmail());
+        Assert.assertEquals(email, empDAO.getPerson("jared86").getEmail());
     }
 
     /**
@@ -71,14 +77,14 @@ public class CassadraTest {
      */
     @Test
     public void updateObjectV2() {
-        Person jared = manager.getPerson("jared86");
+        Person jared = empDAO.getPerson("jared86");
         String email = "newmail@mail.com";
 
         // set a new e-mail
         jared.setEmail("newmail@mail.com");
-        manager.saveV2(jared);
+        empDAO.saveV2(jared);
 
-        Assert.assertEquals(email, manager.getPerson("jared86").getEmail());
+        Assert.assertEquals(email, empDAO.getPerson("jared86").getEmail());
     }
 
     /**
@@ -100,6 +106,9 @@ public class CassadraTest {
 
         // compare with the new value
         Assert.assertEquals("Cloe Matthews", StringSerializer.get().fromByteBuffer(column.getValue()));
+        
+        // back original value
+        manager.update("cloe79", "name", "Cloe Anderson", CassandraDAOImpl.Type.STRING);
     }
 
     /**
@@ -204,16 +213,23 @@ public class CassadraTest {
         Assert.assertEquals(creationTs, column.getClock());
     }
 
+    
+    /**
+     * Checking consistency, the same row being updated by a bunch of parallel threads
+     * @throws InterruptedException
+     */
     @Test
     public void concurrencyAndConsistency() throws InterruptedException {
 
         final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
 
+        // get timestamp for a column that will not be updated
         HColumn<String, ByteBuffer> column = manager.getColumn("ekm82", "passwd");
         long passTs = column.getClock();
 
+        // creates a thread pool
         ExecutorService executor = Executors.newFixedThreadPool(30);
-        System.out.println(manager.getPerson("ekm82"));
+        System.out.println(empDAO.getPerson("ekm82"));
         
         for (int i = 0; i < 10; i++) {
             
@@ -255,10 +271,10 @@ public class CassadraTest {
             ; //wait threads finish the job
         }
         
-        Thread.sleep(5000); //waits for 5 seconds
+        Thread.sleep(1000); //waits for 1 second
         
         // get record after updates
-        Person person = manager.getPerson("ekm82");
+        Person person = empDAO.getPerson("ekm82");
         System.out.println(person);
         
         Assert.assertEquals("Joao Paulo Eiti Kimura", person.getName());
@@ -268,24 +284,70 @@ public class CassadraTest {
         column = manager.getColumn("ekm82", "passwd");
         Assert.assertEquals(passTs, column.getClock());
     }
+  
+    
+    /**
+     * Test iteration over all of some column family internal columns, without exactly known its names (keys)
+     * @throws InterruptedException
+     */
+    @Test 
+    public void simulateMessageBoard() throws InterruptedException {
 
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        CassandraDAOImpl managerMessageBoard = new CassandraDAOImpl("MessageBoard");
+        
+        // clear the today's message board
+        managerMessageBoard.delete("Today");
+        
+        // insert some data
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime()), "ekm82: Hello Everyone, today is a sunny day, nice job for everyone", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 50000), "cloe79: How are you guys?", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 10000), "suzy84: I wish a great day for all of you!", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 150000), "jared86: What's up doc?", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 4000), "jared86: Where are Juliet?", CassandraDAOImpl.Type.STRING);
+
+        Map<String, String> posts = managerMessageBoard.getColumns("Today");
+
+        //wait a little
+        Thread.sleep(3000);
+        
+        //simulate more chat conversation
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime()), "suzy84: Great message board I liked it", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() - 50000), "unknown: what is happening here?", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 10000), "ekm82: Do you think that these messages are being stored?", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 50000), "cloe79: Today is friday!", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 150000), "jared86: Let's practice a little!", CassandraDAOImpl.Type.STRING);
+
+        // read all of the columns of key: Today
+        posts = managerMessageBoard.getColumns("Today");
+        
+        for (Entry<String,String> entry : posts.entrySet()) {
+            String message = sdf.format(new Date(Long.parseLong(entry.getKey())));
+            message += " - " + entry.getValue();
+            System.out.println(message);
+        }
+        
+        // check the message board size
+        Assert.assertEquals(10,posts.entrySet().size());
+    }
+    
     /**
      * creates a initial dataset to test
      */
     private static void setupDataSet() {
-        manager.save(new Person("jared86", "Jared Polin AKA the FRO", "jared", "552fro", "jared@mail.com"));
-        manager.save(new Person("cloe79", "Cloe Anderson", "cloe", "clo24132154312", "cloe@mail.com"));
-        manager.save(new Person("suzy84", "Suzy the Doll", "suzy", "wowsu332", "suzy@mail.com"));
-        manager.save(new Person("ekm82", "Eiti Kimura", "boom", "mypassword", "eiti@mail.com"));
+        empDAO.save(new Person("jared86", "Jared Polin AKA the FRO", "jared", "552fro", "jared@mail.com"));
+        empDAO.save(new Person("cloe79", "Cloe Anderson", "cloe", "clo24132154312", "cloe@mail.com"));
+        empDAO.save(new Person("suzy84", "Suzy the Doll", "suzy", "wowsu332", "suzy@mail.com"));
+        empDAO.save(new Person("ekm82", "Eiti Kimura", "boom", "mypassword", "eiti@mail.com"));
     }
 
     /**
      * removes data from cassandra
      */
     private static void clearDataSet() {
-        manager.deletePerson("ekm82");
-        manager.deletePerson("jared86");
-        manager.deletePerson("cloe79");
-        manager.deletePerson("suzy84");
+        manager.delete("ekm82");
+        manager.delete("jared86");
+        manager.delete("cloe79");
+        manager.delete("suzy84");
     }
 }
