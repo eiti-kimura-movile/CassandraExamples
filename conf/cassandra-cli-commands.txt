@@ -2,7 +2,14 @@
 $CASSANDRA_HOME/bin/cassadra-cli
 
 create keyspace Company;
-
 use Company;
-create column family Employees;
-create column family MessageBoard;
+create column family Employees with comparator=UTF8Type and 
+column_metadata=[
+   {column_name: name, validation_class: UTF8Type},
+   {column_name: email, validation_class: UTF8Type},
+   {column_name: login, validation_class: UTF8Type},
+   {column_name: passwd, validation_class: UTF8Type},
+   {column_name: creation, validation_class: LongType}
+];
+
+create column family MessageBoard with comparator=UTF8Type;

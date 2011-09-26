@@ -3,7 +3,6 @@ package com.movile.cassandra;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -79,7 +78,6 @@ public class CassandraDAOImpl extends CassandraBase {
                 stringSerializer);
 
         ColumnFamilyUpdater<String, String> updater = template.createUpdater(id);
-        updater.setDate(column, new Date());
         
         if (type.equals(Type.STRING)) {
             updater.setString(column, (String) value);

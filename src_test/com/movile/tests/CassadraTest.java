@@ -222,14 +222,15 @@ public class CassadraTest {
     public void concurrencyAndConsistency() throws InterruptedException {
 
         final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
-
+        final String key = "joe92";
+        
         // get timestamp for a column that will not be updated
-        HColumn<String, ByteBuffer> column = manager.getColumn("ekm82", "passwd");
+        HColumn<String, ByteBuffer> column = manager.getColumn(key, "passwd");
         long passTs = column.getClock();
 
         // creates a thread pool
         ExecutorService executor = Executors.newFixedThreadPool(30);
-        System.out.println(empDAO.getPerson("ekm82"));
+        System.out.println(empDAO.getPerson(key));
         
         for (int i = 0; i < 10; i++) {
             
@@ -238,7 +239,7 @@ public class CassadraTest {
                 @Override
                 public void run() {
                     System.out.println("email - Runnning: " + sdf.format(new Date()));
-                    manager.update("ekm82", "email", "my.changed.email.lets.see@mail.com", CassandraDAOImpl.Type.STRING);
+                    manager.update(key, "email", "my.changed.email.lets.see@mail.com", CassandraDAOImpl.Type.STRING);
                 }
             };
 
@@ -246,7 +247,7 @@ public class CassadraTest {
                 @Override
                 public void run() {
                     System.out.println("name - Runnning: " + sdf.format(new Date()));
-                    manager.update("ekm82", "name", "Joao Paulo Eiti Kimura", CassandraDAOImpl.Type.STRING);
+                    manager.update(key, "name", "Joe Robhert (Changed Name)", CassandraDAOImpl.Type.STRING);
                 }
             };
             
@@ -254,7 +255,7 @@ public class CassadraTest {
                 @Override
                 public void run() {
                     System.out.println("creationDate - Runnning: " + sdf.format(new Date()));
-                    manager.update("ekm82", "creation", new Date().getTime(), CassandraDAOImpl.Type.LONG);
+                    manager.update(key, "creation", new Date().getTime(), CassandraDAOImpl.Type.LONG);
                 }
             };
             
@@ -274,14 +275,14 @@ public class CassadraTest {
         Thread.sleep(1000); //waits for 1 second
         
         // get record after updates
-        Person person = empDAO.getPerson("ekm82");
+        Person person = empDAO.getPerson(key);
         System.out.println(person);
         
-        Assert.assertEquals("Joao Paulo Eiti Kimura", person.getName());
+        Assert.assertEquals("Joe Robhert (Changed Name)", person.getName());
         Assert.assertEquals("my.changed.email.lets.see@mail.com", person.getEmail());
 
         // check if the timestamp of other column was untouched
-        column = manager.getColumn("ekm82", "passwd");
+        column = manager.getColumn(key, "passwd");
         Assert.assertEquals(passTs, column.getClock());
     }
   
@@ -317,6 +318,7 @@ public class CassadraTest {
         managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 10000), "ekm82: Do you think that these messages are being stored?", CassandraDAOImpl.Type.STRING);
         managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 50000), "cloe79: Today is friday!", CassandraDAOImpl.Type.STRING);
         managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 150000), "jared86: Let's practice a little!", CassandraDAOImpl.Type.STRING);
+        managerMessageBoard.update("Today", String.valueOf(new Date().getTime() + 900000), "joe92: Let's go to the weekend!", CassandraDAOImpl.Type.STRING);
 
         // read all of the columns of key: Today
         posts = managerMessageBoard.getColumns("Today");
@@ -328,7 +330,27 @@ public class CassadraTest {
         }
         
         // check the message board size
-        Assert.assertEquals(10,posts.entrySet().size());
+        Assert.assertEquals(11,posts.entrySet().size());
+    }
+    
+    @Test
+    public void removeColumn() {
+        
+        Map<String, String> mapState1 = manager.getColumns("joe92");
+        
+        // check the column existence
+        Assert.assertNotNull(manager.getColumn("joe92", "name"));
+        
+        // remove column
+        manager.deleteColumn("joe92", "name");
+        
+        Map<String, String> mapState2 = manager.getColumns("joe92");
+        
+        // check if the number of columns were decreased
+        Assert.assertTrue(mapState1.size() > mapState2.size());
+        
+        // check if column goes away
+        Assert.assertNull(manager.getColumn("joe92", "name"));
     }
     
     /**
@@ -339,6 +361,7 @@ public class CassadraTest {
         empDAO.save(new Person("cloe79", "Cloe Anderson", "cloe", "clo24132154312", "cloe@mail.com"));
         empDAO.save(new Person("suzy84", "Suzy the Doll", "suzy", "wowsu332", "suzy@mail.com"));
         empDAO.save(new Person("ekm82", "Eiti Kimura", "boom", "mypassword", "eiti@mail.com"));
+        empDAO.save(new Person("joe92", "Joe Robertson", "joe", "oed@43##", "joe@mail.com"));
     }
 
     /**
@@ -349,5 +372,6 @@ public class CassadraTest {
         manager.delete("jared86");
         manager.delete("cloe79");
         manager.delete("suzy84");
+        manager.delete("joe92");
     }
 }

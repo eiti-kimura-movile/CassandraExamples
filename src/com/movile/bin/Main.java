@@ -34,11 +34,11 @@ public final class Main {
 
         // the data struture inside cassandra will be:
         // [default@Company] get Employees['ekm82'];
-        // => (column=6372656174696f6e, value=000001328c7020e5, timestamp=1316616159352000)
-        // => (column=656d61696c, value=656974692e6b696d757261406d6f76696c652e636f6d, timestamp=1316616158689000)
-        // => (column=6c6f67696e, value=656974696b696d757261, timestamp=1316616158878000)
-        // => (column=6e616d65, value=45697469204b696d757261, timestamp=1316616158490000)
-        // => (column=706173737764, value=6d7970617373776f7264, timestamp=1316616159053000)
+        // => (column=creation, value=1316785090427, timestamp=1316785090452003)
+        // => (column=email, value=eiti@mail.com, timestamp=1316785090452000)
+        // => (column=login, value=boom, timestamp=1316785090452001)
+        // => (column=name, value=Eiti Kimura, timestamp=1316785090444000)
+        // => (column=passwd, value=mypassword, timestamp=1316785090452002)
 
         // retrieving data from comlumn family
         System.out.println("Reading data");
