@@ -3,6 +3,7 @@ $CASSANDRA_HOME/bin/cassadra-cli
 
 create keyspace Company;
 use Company;
+
 create column family Employees with comparator=UTF8Type and 
 column_metadata=[
    {column_name: name, validation_class: UTF8Type},

@@ -3,6 +3,7 @@ package com.movile.tests;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -66,7 +67,7 @@ public class CassadraTest {
         String email = "newmail@mail.com";
 
         // set a new e-mail
-        jared.setEmail("newmail@mail.com");
+        jared.setEmail(email);
         empDAO.save(jared);
 
         Assert.assertEquals(email, empDAO.getPerson("jared86").getEmail());
@@ -81,7 +82,7 @@ public class CassadraTest {
         String email = "newmail@mail.com";
 
         // set a new e-mail
-        jared.setEmail("newmail@mail.com");
+        jared.setEmail(email);
         empDAO.saveV2(jared);
 
         Assert.assertEquals(email, empDAO.getPerson("jared86").getEmail());
@@ -352,6 +353,17 @@ public class CassadraTest {
         // check if column goes away
         Assert.assertNull(manager.getColumn("joe92", "name"));
     }
+    
+    /**
+     * Retrieve all rows from a column family
+     */
+    @Test
+    public void getAllRows() {
+        List<Person> list = empDAO.getAll();
+        System.out.println("number of records: " + list.size());
+        Assert.assertEquals(5, list.size());
+    } 
+    
     
     /**
      * creates a initial dataset to test
