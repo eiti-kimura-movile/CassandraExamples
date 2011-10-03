@@ -50,7 +50,7 @@ public class CassandraDAOImpl extends CassandraBase {
      * @throws HectorException
      */
     public void delete(String id) throws HectorException {
-        deleteColumn(id, null);
+        deleteColumn(id,null);
     }
 
     /**

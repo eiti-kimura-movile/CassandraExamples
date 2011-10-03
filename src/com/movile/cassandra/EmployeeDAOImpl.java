@@ -135,22 +135,22 @@ public class EmployeeDAOImpl extends CassandraBase {
                 ColumnSlice<String, Object> columnSlice = row.getColumnSlice();
                 Person person = new Person();
                 person.setId(row.getKey());
-                
+
                 // get column information and set the object
                 HColumn<String, Object> column = columnSlice.getColumnByName("name");
-                person.setName(stringSerializer.fromByteBuffer(column.getValueBytes()));
-                
+                person.setName(column != null ? stringSerializer.fromByteBuffer(column.getValueBytes()) : "");
+
                 column = columnSlice.getColumnByName("email");
-                person.setEmail(stringSerializer.fromByteBuffer(column.getValueBytes()));
-                
+                person.setEmail(column != null ? stringSerializer.fromByteBuffer(column.getValueBytes()) : "");
+
                 column = columnSlice.getColumnByName("login");
-                person.setLogin(stringSerializer.fromByteBuffer(column.getValueBytes()));
-                
+                person.setLogin(column != null ? stringSerializer.fromByteBuffer(column.getValueBytes()) : "");
+
                 column = columnSlice.getColumnByName("passwd");
-                person.setPasswd(stringSerializer.fromByteBuffer(column.getValueBytes()));
-                
+                person.setPasswd(column != null ? stringSerializer.fromByteBuffer(column.getValueBytes()) : "");
+
                 column = columnSlice.getColumnByName("creation");
-                person.setCreationDate(new Date(longSerializer.fromByteBuffer(column.getValueBytes())));
+                person.setCreationDate(column != null ? new Date(longSerializer.fromByteBuffer(column.getValueBytes())) : null);
 
                 employees.add(person);
             }

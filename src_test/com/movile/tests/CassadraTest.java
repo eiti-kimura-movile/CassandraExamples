@@ -364,7 +364,6 @@ public class CassadraTest {
         Assert.assertEquals(5, list.size());
     } 
     
-    
     /**
      * creates a initial dataset to test
      */
