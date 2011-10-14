@@ -11,6 +11,7 @@ import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
 import me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate;
 import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -44,6 +45,17 @@ public class CassandraDAOImpl extends CassandraBase {
         this.columnFamily = columnFamily;
     }
 
+    public void increment(String key, String columnName) {
+        increment(key, columnName,1L);
+    }
+    
+    public void increment(String key, String columnName, long value) {
+        Mutator<String> mutator = HFactory.createMutator(keyspace, stringSerializer);
+        HCounterColumn<String> column = HFactory.createCounterColumn(columnName, value); 
+        mutator.addCounter(key,"Counters",column);
+        mutator.execute();
+    }
+    
     /**
      * Deletes a key and all of the related columns
      * @param id column key

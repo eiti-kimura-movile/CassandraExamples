@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import com.movile.bean.Person;
 import com.movile.cassandra.CassandraDAOImpl;
+import com.movile.cassandra.CountersDAOImpl;
 import com.movile.cassandra.EmployeeDAOImpl;
 import com.movile.utils.AppProperties;
 
@@ -363,6 +364,24 @@ public class CassadraTest {
         System.out.println("number of records: " + list.size());
         Assert.assertEquals(5, list.size());
     } 
+    
+    
+    /**
+     * increment a counter column family
+     */
+    @Test
+    public void changeCounter() {
+        CountersDAOImpl counters = new CountersDAOImpl("Counters");
+        counters.increment("jared86", "posts");
+        counters.decrement("jared86", "posts");
+        counters.add("jared86", "posts", 5L);
+    }
+    
+    @Test
+    public void getCounterValue() {
+        CountersDAOImpl counters = new CountersDAOImpl("Counters");
+        Assert.assertNotNull(counters.get("jared86", "posts"));
+    }    
     
     /**
      * creates a initial dataset to test

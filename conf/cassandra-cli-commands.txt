@@ -14,3 +14,8 @@ column_metadata=[
 ];
 
 create column family MessageBoard with comparator=UTF8Type;
+
+create column family Counters with 
+   default_validation_class=CounterColumnType 
+   and key_validation_class=UTF8Type 
+   and comparator=UTF8Type;

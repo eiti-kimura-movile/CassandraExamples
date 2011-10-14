@@ -11,8 +11,12 @@ This project intend to test some basic features of apache cassandra, like:
 	- write to a simple column family
 	- read from a simple column family
 	- updates a specific column value
+	- increment and decrement distributed counters
+	- get counter value
 
-Tested with cassandra version: 0.7.6-2
+2011-10-14 - New support for cassandra: 0.8.x
+
+Tested with cassandra version: 0.8.7
 
 This project uses:
 
