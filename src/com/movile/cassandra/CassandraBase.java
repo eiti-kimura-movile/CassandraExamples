@@ -68,6 +68,7 @@ public class CassandraBase {
         // set the consistency level
         ConfigurableConsistencyLevel consistenceLevel = new ConfigurableConsistencyLevel();
         consistenceLevel.setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
+        consistenceLevel.setDefaultWriteConsistencyLevel(HConsistencyLevel.ONE);
         
         keyspace = HFactory.createKeyspace(KEYSPACE, cluster, consistenceLevel, FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE);
 

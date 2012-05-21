@@ -19,7 +19,7 @@ public final class Main {
      * @param args
      */
     public static void main(String[] args) throws Exception {
-
+    	
         // initializing resouces, logs property files and etc...
         DOMConfigurator.configure("conf/log/log4j.xml");
         AppProperties.getDefaultInstance().loadProperties("conf/const.properties");
