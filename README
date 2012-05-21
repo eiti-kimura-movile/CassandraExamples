@@ -14,7 +14,11 @@ This project intend to test some basic features of apache cassandra, like:
 	- increment and decrement distributed counters
 	- get counter value
 
+
+2012-05-21 - Updated Hector to support Cassandra 1.0.x versions
+
 2011-10-14 - New support for cassandra: 0.8.x
+
 
 Tested with cassandra version: 0.8.7
 
